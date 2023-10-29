@@ -10,25 +10,29 @@ interface ChatProps {
         user_id: string,
     },
     time: string
-  }
+}
 
 function Chat({ chat }: { chat: ChatProps }) {
     const message = chat.message
     const id = chat.id
     const avatarUrl = chat.sender.image
+    const self = chat.sender.self
   return (
     <div
         className="chat-container"
         key={id}
         style={{
             display: "flex",
-            flexDirection: "row",
-            marginLeft: 16,
-            marginRight: 40,
+            flexDirection: self ? "row-reverse" : "row",
+            marginLeft: self ? 40 : 16,
+            marginRight: self ? 20 : 40,
             marginTop: 20,
             gap: 8
         }}
     >
+        {
+            self ?
+            null:
         <div
             className="chat-icon"
             style={{
@@ -54,6 +58,7 @@ function Chat({ chat }: { chat: ChatProps }) {
                 }}    
             />
         </div>
+        }
         <div
             className="chat-content"
             style={{
@@ -62,18 +67,19 @@ function Chat({ chat }: { chat: ChatProps }) {
                 flexDirection: "column",
                 justifyContent: "center",
                 alignItems: "center",
-                borderRadius: "0px 12px 12px 12px",
-                backgroundColor: "#FFF",
                 boxShadow: "0px 4px 8px 0px rgba(0, 0, 0, 0.08)",
+                
+                borderRadius: self ? "12px 12px 0px 12px" : "0px 12px 12px 12px",
+                backgroundColor: self ? "#1C63D5" : "#FFF",
             }}
-        >
+            >
             <p
                 style={{
                     alignSelf: "stretch",
-                    color: "#606060",
+                    color: self ? "#FFF" : "#606060",
                     fontSize: 14,
                     fontStyle: "normal",
-                    fontWeight: "400",
+                    fontWeight: "500",
                     lineHeight: "normal",
                     padding: 0,
                     margin: 0

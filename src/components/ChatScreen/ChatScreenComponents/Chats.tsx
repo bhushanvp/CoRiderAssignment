@@ -4,38 +4,63 @@ import Chat from './Chat';
 
 function Chats() {
     
-    const [ chats, setChats ] = useState([])
-    const chatsContainerRef = useRef<HTMLDivElement>(null);
+    const [chats, setChats] = useState<Array<any>>([]);
+    const chatsRef = useRef("")
+    const chatEndRef = useRef<HTMLDivElement | null>(null); // Specify the type of the ref
+    // const [ page, setPage ] = useState(0)
+    const pageRef = useRef(0)
+    const [ isLoading, setIsLoading ] = useState(false)
 
-    const getChats = async (page = 0) => {
+    const getChats = async () => {
         try {
-            const response = await fetch(`https://qa.corider.in/assignment/chat?page=${page}`)
-            
+            const response = await fetch(`https://qa.corider.in/assignment/chat?page=${pageRef.current}`)
             const chatsData = await response.json()
             
             if (chatsData.chats?.length) {
-                const chats = chatsData.chats
-                setChats(chats)
-            } else {
-                return []
-            }
+                const oldChats = JSON.parse(chatsRef.current || "[]");
+                const newChats = chatsData.chats.concat(oldChats)
+                chatsRef.current = JSON.stringify(newChats);
+                setChats(newChats);
+                pageRef.current += 1;
+              } else {
+                return [];
+              }
 
         } catch (err) {
             console.log(err);
             return err
         }
+        setIsLoading(false)
     }
 
-    useEffect(()=>{
-        getChats()
-    }, [])
+    useEffect(() => {
+      getChats();
+
+      window.addEventListener('scroll', ()=>{
+        if (window.scrollY === 0) {
+            setIsLoading(true)
+            setTimeout(() => {
+                getChats()
+            }, 2000);
+        }
+      })
+
+      return ()=>{
+        window.removeEventListener('scroll', getChats);
+      }
+    }, []);
 
     useEffect(() => {
-        // Scroll to the bottom of the chat container when chats change
-        if (chatsContainerRef.current) {
-          chatsContainerRef.current.scrollTop = chatsContainerRef.current.scrollHeight;
+        if (pageRef.current<3) {
+            scrollToChatEnd();
         }
     }, [chats]);
+
+    const scrollToChatEnd = () => {
+      if (chatEndRef.current) {
+        chatEndRef.current.scrollIntoView();
+      }
+    };
 
   return (
     <div
@@ -44,11 +69,33 @@ function Chats() {
             display: "flex",
             marginTop: 155,
             paddingBottom: 78,
-            flexDirection: 'column', // Change this to column to stack chats vertically
-            height: '100%', // You may want to set a fixed height for the chat container
-            overflowY: 'auto', // Add vertical scrollbar when needed
+            flexDirection: 'column',
+            height: '100%',
+            overflowY: 'auto',
         }}
     >
+    <div
+        className="loading-container"
+        style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+        }}
+    >
+      <div
+        className="loading-spinner"
+        style={{
+            border: "4px solid rgba(255, 255, 255, 0.3)",
+            borderTop: "4px solid #007bff",
+            borderRadius: "50%",
+            width: 50,
+            height: 50,
+            animation: "spin 1s linear infinite",
+        }}
+    ></div>
+      <p>Loading...</p>
+    </div>
         <div className="chats">
             {
                 chats ?
@@ -59,6 +106,7 @@ function Chats() {
                 }) :
                 null
             }
+            <div ref={chatEndRef} />
         </div>
     </div>
   )
